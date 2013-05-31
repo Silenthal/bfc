@@ -1,15 +1,12 @@
-#include "interpreter.h"
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "interpreter.h"
+#include "memory.h"
 
 // Vars
-#define MEMSIZE 0x10000
 #define ERRSIZE 256
-static int dataPointer = 0;
 static int instPointer = 0;
-static uint8_t memory[MEMSIZE];
 static char* prog = NULL;
 static int progSz = 0;
 static bool error = false;
@@ -35,45 +32,37 @@ void closeLoop();
 
 uint8_t readMem()
 {
-    return memory[dataPointer];
+    return bf_mem_read();
 }
 
 void readIO()
 {
-    memory[dataPointer] = getchar();
+    bf_mem_write(getchar());
 }
 
 void writeIO()
 {
-    putchar(memory[dataPointer]);
+    putchar(bf_mem_read());
 }
 
 void incMem()
 {
-    ++memory[dataPointer];
+    bf_mem_inc();
 }
 
 void decMem()
 {
-    --memory[dataPointer];
+    bf_mem_dec();
 }
 
 void incMemPointer()
 {
-    if (++dataPointer >= MEMSIZE)
-    {
-        snprintf(lastError, ERRSIZE, "Error: memory upper bounds reached.\n");
-        error = true;
-    }
+    bf_mem_right();
 }
 
 void decMemPointer()
 {
-    if (--dataPointer < 0)
-    {
-        snprintf(lastError, ERRSIZE, "Error: memory lower bounds reached.\n");
-        error = true;
-    }
+    bf_mem_left();
 }
 
 void openLoop()
@@ -143,6 +132,7 @@ char fetch()
 
 void reset()
 {
+    bf_mem_clear();
     instPointer = 0;
 }
 
@@ -238,6 +228,7 @@ const char* bf_get_last_error()
 
 void bf_free_resources()
 {
+    reset();
     free(prog);
 }
 
